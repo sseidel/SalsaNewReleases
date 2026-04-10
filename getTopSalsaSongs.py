@@ -60,18 +60,21 @@ def get_songs(url):
 
 
 url = "https://www.newgensalsa.com/category/salsaplaylist/"
-number_of_main_pages_to_scan = 5
+number_of_main_pages_to_scan = 2
 songs = set()
-for site in range(1,number_of_main_pages_to_scan+1):
+
+playlist_details = sp.playlist_items(playlist_id)
+
+for site in range(1,number_of_main_pages_to_scan + 1):
   actual_url = f"{url}page/{site}/"
   songs = songs.union(get_playlist_urls(actual_url))
 
-for title, artist in songs:
-    
+for title, artist in songs:    
     query = f"track:{title} artist:{artist}"
     print(query)
     result = sp.search(q=query, type="track", limit=1)
     if len(result['tracks']['items']):
      uri = result['tracks']['items'][0]['uri']
      print(f"uri: {uri}")
-     sp.playlist_add_items(PLAYLIST_ID,[uri])
+     if uri not in uris:
+      sp.playlist_add_items(PLAYLIST_ID,[uri])
