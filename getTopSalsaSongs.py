@@ -2,13 +2,14 @@ import requests
 import re
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from datetime import datetime
+import traceback
 
+STARTDATE = datetime(2026,1,1)
 CACHE = '.spotipyoauthcache'
-# create this at https://developer.spotify.com/dashboard
 CLIENT_ID = ""
-# create this at https://developer.spotify.com/dashboard
 CLIENT_SECRET = ""
-PLAYLIST_ID = ""
+playlist_id = ""
 headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
     }
@@ -37,7 +38,7 @@ def get_playlist_urls(url):
         songs = songs.union(new_songs)
         print("got the songs:")
      except Exception:
-        print("exception")
+        print(traceback.format_exc())
     return songs
 
 def get_songs(url):
@@ -48,9 +49,11 @@ def get_songs(url):
     tables = re.findall(r"<table.*?>(.*?)</table>", html, re.DOTALL)
     table = tables[0]
     rows = re.findall(r"<tr>(.*?)</tr>", table, re.DOTALL)
-    for n in range(1,11):
-      column_string = rows[n]
+    for row in rows:
+      column_string = row
       columns = re.findall(r"<td>(.*?)</td>", column_string, re.DOTALL)
+      if not len(columns):
+          continue
       song_titel = columns[1]
       artist_name = columns[2]
       song_tuple = (song_titel, artist_name)
@@ -59,22 +62,31 @@ def get_songs(url):
     return songs
 
 
+def get_date_of_item(item):
+    year = int(item['album']['release_date'].split('-')[0])
+    month = int(item['album']['release_date'].split('-')[1])
+    day = int(item['album']['release_date'].split('-')[2])
+    return datetime(year, month, day)
+
 url = "https://www.newgensalsa.com/category/salsaplaylist/"
-number_of_main_pages_to_scan = 2
+number_of_main_pages_to_scan = 1
 songs = set()
 
 playlist_details = sp.playlist_items(playlist_id)
+uris = [ item['item']['uri'] for item in  playlist_details['items']  ]
 
 for site in range(1,number_of_main_pages_to_scan + 1):
   actual_url = f"{url}page/{site}/"
   songs = songs.union(get_playlist_urls(actual_url))
 
-for title, artist in songs:    
+for title, artist in songs:
+    
     query = f"track:{title} artist:{artist}"
-    print(query)
     result = sp.search(q=query, type="track", limit=1)
-    if len(result['tracks']['items']):
-     uri = result['tracks']['items'][0]['uri']
-     print(f"uri: {uri}")
-     if uri not in uris:
-      sp.playlist_add_items(PLAYLIST_ID,[uri])
+    if len(result['tracks']['items']): 
+        item = result['tracks']['items'][0]
+        release_date = get_date_of_item(item)
+        uri = item['uri']
+        
+        if uri not in uris and STARTDATE < get_date_of_item(result['tracks']['items'][0]):
+            sp.playlist_add_items(playlist_id,[uri])
