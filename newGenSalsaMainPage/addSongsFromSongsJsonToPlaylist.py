@@ -37,6 +37,12 @@ def get_date_of_item(item):
     day = int(item['album']['release_date'].split('-')[2])
     return datetime(year, month, day)
 
+def clean_up(input_string):
+    words_to_replace = [ "Offical", "Oficial", "oficial", "Video", str(YEAR), "(", ")"]
+    clean_word = input_string
+    for word in words_to_replace:
+        clean_word = clean_word.replace(word, "")
+    return clean_word
 
 filename = "songs.json"
 
@@ -44,14 +50,16 @@ with open(filename) as file:
     data = json.load(file)
 
 songs = [ {"title":entry['song'].split('–')[0].strip(),"artist":entry['song'].split('–')[1].strip()} for entry in data if entry['year'] == str(YEAR) and '–' in entry['song'] ]
-
+songs2 = [ {"title":entry['song'].split('-')[0].strip(),"artist":entry['song'].split('-')[1].strip()} for entry in data if entry['year'] == str(YEAR) and '-' in entry['song'] ]
+video_songs = [ {"title":entry['song'].split('–')[0].strip(),"artist":clean_up(entry['song'].split('–')[1]).strip()} for entry in data if str(YEAR) in entry['song'] and '–' in entry['song'] ]
+video_songs2 = [ {"title":entry['song'].split('-')[0].strip(),"artist":clean_up(entry['song'].split('-')[1]).strip()} for entry in data if str(YEAR) in entry['song'] and '-' in entry['song'] ]
 
 
 playlist_details = sp.playlist_items(playlist_id)
 uris = [ item['item']['uri'] for item in  playlist_details['items']  ]
 
 
-for song in songs:
+for song in songs + songs2 + video_songs+ video_songs2:
     artist =song['artist']
     title = song['title']
     query = f"track:{title} artist:{artist}"
