@@ -7,9 +7,12 @@ import traceback
 
 STARTDATE = datetime(2026,1,1)
 CACHE = '.spotipyoauthcache'
+# insert your own client_id
 CLIENT_ID = ""
+# insert your own client_secret
 CLIENT_SECRET = ""
-playlist_id = ""
+# replace with our own playlist
+playlist_id = "5En51cumeXQmyMoLuj3KHw"
 headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"
     }
