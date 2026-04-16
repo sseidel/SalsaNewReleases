@@ -38,7 +38,7 @@ def get_date_of_item(item):
     return datetime(year, month, day)
 
 def clean_up(input_string):
-    words_to_replace = [ "Offical", "Oficial", "oficial", "Video", str(YEAR), "(", ")"]
+    words_to_replace = [ "Offical", "Oficial", "oficial", "Video", str(YEAR), "(", ")", "featuring", "feat", "Ft."]
     clean_word = input_string
     for word in words_to_replace:
         clean_word = clean_word.replace(word, "")
@@ -49,10 +49,10 @@ filename = "songs.json"
 with open(filename) as file:
     data = json.load(file)
 
-songs = [ {"title":entry['song'].split('–')[0].strip(),"artist":entry['song'].split('–')[1].strip()} for entry in data if entry['year'] == str(YEAR) and '–' in entry['song'] ]
-songs2 = [ {"title":entry['song'].split('-')[0].strip(),"artist":entry['song'].split('-')[1].strip()} for entry in data if entry['year'] == str(YEAR) and '-' in entry['song'] ]
-video_songs = [ {"title":entry['song'].split('–')[0].strip(),"artist":clean_up(entry['song'].split('–')[1]).strip()} for entry in data if str(YEAR) in entry['song'] and '–' in entry['song'] ]
-video_songs2 = [ {"title":entry['song'].split('-')[0].strip(),"artist":clean_up(entry['song'].split('-')[1]).strip()} for entry in data if str(YEAR) in entry['song'] and '-' in entry['song'] ]
+songs = [ { "title":entry['song'].split('–')[0].strip(), "artist":clean_up(entry['song'].split('–')[1]).strip() } for entry in data if entry['year'] == str(YEAR) and '–' in entry['song'] ]
+songs2 = [ { "title":entry['song'].split('-')[0].strip(), "artist":clean_up(entry['song'].split('-')[1]).strip() } for entry in data if entry['year'] == str(YEAR) and '-' in entry['song'] ]
+video_songs = [ { "title":entry['song'].split('–')[0].strip(), "artist":clean_up(entry['song'].split('–')[1]).strip() } for entry in data if str(YEAR) in entry['song'] and '–' in entry['song'] ]
+video_songs2 = [ { "title":entry['song'].split('-')[0].strip(), "artist":clean_up(entry['song'].split('-')[1]).strip() } for entry in data if str(YEAR) in entry['song'] and '-' in entry['song'] ]
 
 
 playlist_details = sp.playlist_items(playlist_id)
