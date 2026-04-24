@@ -75,8 +75,14 @@ url = "https://www.newgensalsa.com/category/salsaplaylist/"
 number_of_main_pages_to_scan = 1
 songs = set()
 
-playlist_details = sp.playlist_items(playlist_id)
-uris = [ item['item']['uri'] for item in  playlist_details['items']  ]
+more_songs = True
+offset = 0
+uris = []
+while more_songs:
+    playlist_details = sp.playlist_items(playlist_id,offset=offset)
+    uris = uris + [ item['item']['uri'] for item in  playlist_details['items']  ]
+    more_songs = playlist_details['next']
+    offset = offset + 50
 
 for site in range(1,number_of_main_pages_to_scan + 1):
   actual_url = f"{url}page/{site}/"
