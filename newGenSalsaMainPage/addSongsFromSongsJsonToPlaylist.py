@@ -38,10 +38,12 @@ def get_date_of_item(item):
     return datetime(year, month, day)
 
 def clean_up(input_string):
-    words_to_replace = [ "Offical", "Oficial", "oficial", "Video", str(YEAR), "(", ")", "featuring", "feat", "Ft."]
+    words_to_replace = [ "Offical", "Oficial", "oficial", "Video", str(YEAR), "(", ")", "featuring", "feat", "Ft.", "ft.", "Spotlight: "]
     clean_word = input_string
     for word in words_to_replace:
         clean_word = clean_word.replace(word, "")
+    clean_word = clean_word.replace("  ", " ")
+    clean_word = clean_word.replace(" y ", " ")
     return clean_word
 
 filename = "songs.json"
@@ -49,26 +51,31 @@ filename = "songs.json"
 with open(filename) as file:
     data = json.load(file)
 
-songs = [ { "title":entry['song'].split('–')[0].strip(), "artist":clean_up(entry['song'].split('–')[1]).strip() } for entry in data if entry['year'] == str(YEAR) and '–' in entry['song'] ]
-songs2 = [ { "title":entry['song'].split('-')[0].strip(), "artist":clean_up(entry['song'].split('-')[1]).strip() } for entry in data if entry['year'] == str(YEAR) and '-' in entry['song'] ]
-video_songs = [ { "title":entry['song'].split('–')[0].strip(), "artist":clean_up(entry['song'].split('–')[1]).strip() } for entry in data if str(YEAR) in entry['song'] and '–' in entry['song'] ]
-video_songs2 = [ { "title":entry['song'].split('-')[0].strip(), "artist":clean_up(entry['song'].split('-')[1]).strip() } for entry in data if str(YEAR) in entry['song'] and '-' in entry['song'] ]
+uris = []
+songs = [ {"title":clean_up(entry['song'].split('-')[0]).strip(),"artist":clean_up(entry['song'].split('-')[1]).strip()} for entry in data if entry['year'] == str(YEAR) and '-' in entry['song'] ]
+video_songs = [ {"title":clean_up(entry['song'].split('-')[0]).strip(),"artist":clean_up(entry['song'].split('-')[1]).strip()} for entry in data if str(YEAR) in entry['song'] and '-' in entry['song'] ]
+more_songs = True
+offset = 0
+while more_songs:
+    playlist_details = sp.playlist_items(playlist_id,offset=offset)
+    uris = uris + [ item['item']['uri'] for item in  playlist_details['items']  ]
+    more_songs = playlist_details['next']
+    offset = offset + 50
 
-
-playlist_details = sp.playlist_items(playlist_id)
-uris = [ item['item']['uri'] for item in  playlist_details['items']  ]
-
-
-for song in songs + songs2 + video_songs+ video_songs2:
+for song in songs + video_songs:
     artist =song['artist']
     title = song['title']
     query = f"track:{title} artist:{artist}"
-    print(query)
+
     result = sp.search(q=query, type="track", limit=1)
-    print(result)
     if len(result['tracks']['items']):
         item = result['tracks']['items'][0]
         release_date = get_date_of_item(item)
+        uri = item['uri']
+        if uri not in uris and STARTDATE < get_date_of_item(result['tracks']['items'][0]):
+            sp.playlist_add_items(playlist_id,[uri])
+    else:
+        print(f"no result for query: {query}")
         uri = item['uri']
         if uri not in uris and STARTDATE < get_date_of_item(result['tracks']['items'][0]):
             sp.playlist_add_items(playlist_id,[uri])
