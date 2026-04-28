@@ -33,6 +33,7 @@ def get_playlist_urls(url):
     response = requests.get(url, headers=headers, timeout=10)
     html = response.text
     urls = set(re.findall(r"href=\"(https://www.newgensalsa.com/newgensalsa.*?)\"",html))
+    urls = urls | set(re.findall(r"href=\"(https://www.newgensalsa.com/the-newgensalsa.*?)\"",html))
     print(urls)
     songs = set()
     for url in urls:
