@@ -2,6 +2,7 @@ import requests
 import re
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from bs4 import BeautifulSoup
 from datetime import datetime
 import traceback
 
@@ -38,7 +39,7 @@ def get_playlist_urls(url):
     songs = set()
     for url in urls:
      try:
-        new_songs = get_songs(url)
+        new_songs = get_songs_2026(url)
         songs = songs.union(new_songs)
         print("got the songs:")
      except Exception:
@@ -65,6 +66,27 @@ def get_songs(url):
 
     return songs
 
+def get_songs_2026(url):
+    print(url)
+    songs = set()
+    response = requests.get(url, headers=headers, timeout=10)
+    html = response.text
+    soup = BeautifulSoup(html, 'html.parser')
+    rows = soup.find_all(
+    "div",
+    attrs={"role": "row", "class": "ngs-chart__row"},
+    )
+
+    for row in rows:
+        artist =row.find("span",attrs={"role": "cell", "class": "ngs-chart__artist"})
+        song = row.find("span",attrs={"role": "cell", "class": "ngs-chart__song"})
+        if artist:
+            artist_text = artist.get_text().strip()
+            song_text = song.get_text().strip()
+            #print(f"artist: {artist_text}\tsong:{song_text}")
+            song_tuple = (song_text, artist_text)
+            songs.add(song_tuple)
+    return songs
 
 def get_date_of_item(item):
     year = int(item['album']['release_date'].split('-')[0])
